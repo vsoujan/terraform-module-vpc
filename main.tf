@@ -8,3 +8,15 @@ module "subnets" {
   subnets  = each.value
   vpc_id   = aws_vpc.main.id
 }
+
+resource "aws_internet_gateway" "ig" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "Internet-Gateway"
+  }
+}
+
+output "subnets" {
+  value = "module.subnets"
+}
