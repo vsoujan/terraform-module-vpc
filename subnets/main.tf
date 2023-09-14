@@ -5,10 +5,17 @@ resource "aws_subnet" "main" {
   availability_zone = each.value["az"]
 
   tags = {
-
     Name = each.key
   }
+}
 
+resource "aws_route_table" "main" {
+  vpc_id = var.vpc_id
+  for_each = var.subnets
+
+  tags = {
+    Name = each.key
+  }
 }
 
 
