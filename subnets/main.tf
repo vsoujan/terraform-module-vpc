@@ -25,11 +25,11 @@ resource "aws_route_table_association" "main" {
 }
 
 output "subnet" {
-  value = "aws_subnet.main"
+  value = aws_subnet.main
 }
 
 output "route_table" {
-  value = "aws_route_table.main"
+  value = aws_route_table.main
 }
 
 

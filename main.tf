@@ -18,5 +18,5 @@ resource "aws_internet_gateway" "ig" {
 }
 
 output "subnets" {
-  value = "module.subnets"
+  value = module.subnets
 }
