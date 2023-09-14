@@ -7,5 +7,5 @@ module "subnets" {
   for_each = var.subnets
   vpc_id = aws_vpc.main.id
 
-  subnets = "each.value"
+  subnets = each.value["subnets"]
 }
