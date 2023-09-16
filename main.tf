@@ -1,5 +1,6 @@
 resource "aws_vpc" "main" {
   cidr_block = var.cidr
+  tags = merge(local.tags, {Name = "${var.env}-vpc"})
 }
 
 module "subnets" {
@@ -7,14 +8,15 @@ module "subnets" {
   for_each = var.subnets
   subnets  = each.value
   vpc_id   = aws_vpc.main.id
+  tags = local.tags
+  env = var.env
+
 }
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
-  tags = {
-    Name = "Internet-Gateway"
-  }
+  tags = merge(local.tags, {Name = "${var.env}-igw"})
 }
 
 resource "aws_route" "igw" {
@@ -33,6 +35,8 @@ resource "aws_nat_gateway" "ngw" {
   count         = length(local.public_subnet_ids)
   allocation_id = element(aws_eip.ngw.*.id, count.index)
   subnet_id     = element(local.public_subnet_ids, count.index)
+  tags = merge(local.tags, {Name = "${var.env}-ngw"})
+
 }
 
 resource "aws_route" "ngw" {
@@ -46,6 +50,8 @@ resource "aws_vpc_peering_connection" "peering" {
   peer_vpc_id   = aws_vpc.main.id
   vpc_id        = var.default_vpc_id
   auto_accept   = true
+  tags = merge(local.tags, {Name = "${var.env}-peering"})
+
 }
 
 resource "aws_route" "peer" {
@@ -59,39 +65,4 @@ resource "aws_route" "default_peer" {
   route_table_id         = var.default_vpc_route_table_id
   destination_cidr_block = var.cidr
   vpc_peering_connection_id = aws_vpc_peering_connection.peering.id
-}
-
-resource "aws_instance" "test" {
-
-  instance_type = "t3.micro"
-  vpc_security_group_ids = [aws_security_group.allow_tls.id]
-  ami = "ami-03265a0778a880afb"
-  subnet_id = local.app_subnet_ids[0]
-
-}
-
-resource "aws_security_group" "allow_tls" {
-  name        = "allow_tls"
-  description = "Allow TLS inbound traffic"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description      = "TLS from VPC"
-    from_port        = 22
-    to_port          = 22
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-
-  tags = {
-    Name = "allow_tls"
-  }
 }
